@@ -39,15 +39,16 @@ simpleJsApp.setTimeout = function appTimeOut(timeout) {
 simpleJsApp.init = function init() {
   document.addEventListener('bidResponse', function(event) {
     for (var i = 0; i < simpleJsApp.callbacks.length; i++) {
-      var bidWonIndex = Math.floor(Math.random() * 10) + 1;
-      simpleJsApp.callbacks[i].call(null, event.detail[bidWonIndex]);
+      var bidWonIndex = Math.floor(Math.random() * 9);
+      console.log('bidWonIndex', bidWonIndex);
+      simpleJsApp.callbacks.pop().call(null, event.detail[bidWonIndex]);
     }
   });
   processQue();
-  this.getBids();
 };
 
 simpleJsApp.getBids = function(options) {
+  console.log('gettings bids...');
   this.callbacks.push(options.bidsBackHandler);
   window.setTimeout(bidServer.getBids, this.timeout);
 };

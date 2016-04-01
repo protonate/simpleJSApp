@@ -3,44 +3,65 @@
 <head>
     <script>
 
+        /**
+         * Code Challenge: Concurrency
+         *
+         * The app currently ques some functions, loads the simpleJsApp script
+         * the calls the queued functions. The `simpleJsApp.init` function calls `getBids`
+         * on initial oad and thereafter when clicking the "Get Bids" button. The response
+         * is passed to an event and handled by `bidsBackHandler` where the bid info
+         * is rendered to <div id="placement-one" /> on this page.
+         *
+         * We would like to have this modified to have an additional button and placement,
+         * to have each button just update one of the div render targets, and to have a button to
+         * get bids for all placements. Also, if the button is clicked multiple times it will
+         * render each returning bid as soon as its back. How could we set up a mechanism to
+         * ensure that each bid was rendered and visible for a minimum amount of time before a
+         * subsequent bid response replaces it.
+         */
+
         // if simpleJsApp already exists in global scope, use it, if not, create the object
         window.simpleJsApp = (window.simpleJsApp || {});
+
+        // set a `que` array that can store functions until `simpleJsApp` is available
         window.simpleJsApp.que = window.simpleJsApp.que || [];
 
-        var REQUEST_TIMEOUT = 1000;
-        setTimeout(initApp, REQUEST_TIMEOUT);
+        // this timeout should be set to allow enough time to trigger concurrent `getBids` calls
+        var REQUEST_TIMEOUT = 2000;
+
+        // currently there is only one placement, how would we modify app to accommodate two or mor?e
+        var placementId1 = 'placement-one';
 
         function initApp() {
-            simpleJsApp.que.push(function () {
+            simpleJsApp.que.push(function() {
+                simpleJsApp.setTimeout(REQUEST_TIMEOUT);
                 simpleJsApp.init();
             });
         }
-
-        function bidsBackHandler(bidResponses) {
+        // bidsBackHandler is called after getBids timeout expires to simulate an XHR or API async call
+        function bidsBackHandler(bidResponse) {
+            // the handler is tightly coupled to placementId1 at the moment, how might this change?
             document.getElementById(placementId1).innerHTML = '<pre>' +
-                    JSON.stringify(bidResponses) + '</pre>'
+                    JSON.stringify(bidResponse) + '</pre>'
         }
 
-        var placementId1 = 'placement-one';
-
         simpleJsApp.que.push(function () {
-            simpleJsApp.setTimeout(REQUEST_TIMEOUT);
+            // when simpleJSApp is available, call initial getBid and pass bidsBackHandler as the callback)
             simpleJsApp.getBids({
-
-                // `bidsBackHandler` is called when timeout is reached
                 bidsBackHandler: bidsBackHandler
             });
         });
 
+        // immediate implemented function expression loads the simpleJsApp script
         (function () {
             var d = document, pbs = d.createElement("script"), pro = d.location.protocal;
             pbs.type = "text/javascript";
-            //pbs.src = 'http://mkendall.devnxs.net/prebid.min.js'
             pbs.src = '/build/dev/simpleJsApp.js';
             var target = document.getElementsByTagName("head")[0];
             target.insertBefore(pbs, target.firstChild);
         })();
 
+        setTimeout(initApp, 500);
     </script>
 </head>
 
