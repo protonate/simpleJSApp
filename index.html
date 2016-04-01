@@ -1,0 +1,58 @@
+<html>
+
+<head>
+    <script>
+
+        // if simpleJsApp already exists in global scope, use it, if not, create the object
+        window.simpleJsApp = (window.simpleJsApp || {});
+        window.simpleJsApp.que = window.simpleJsApp.que || [];
+
+        var REQUEST_TIMEOUT = 1000;
+        setTimeout(initApp, REQUEST_TIMEOUT);
+
+        function initApp() {
+            simpleJsApp.que.push(function () {
+                simpleJsApp.init();
+            });
+        }
+
+        function bidsBackHandler(bidResponses) {
+            document.getElementById(placementId1).innerHTML = '<pre>' +
+                    JSON.stringify(bidResponses) + '</pre>'
+        }
+
+        var placementId1 = 'placement-one';
+
+        simpleJsApp.que.push(function () {
+            simpleJsApp.setTimeout(REQUEST_TIMEOUT);
+            simpleJsApp.getBids({
+
+                // `bidsBackHandler` is called when timeout is reached
+                bidsBackHandler: bidsBackHandler
+            });
+        });
+
+        (function () {
+            var d = document, pbs = d.createElement("script"), pro = d.location.protocal;
+            pbs.type = "text/javascript";
+            //pbs.src = 'http://mkendall.devnxs.net/prebid.min.js'
+            pbs.src = '/build/dev/simpleJsApp.js';
+            var target = document.getElementsByTagName("head")[0];
+            target.insertBefore(pbs, target.firstChild);
+        })();
+
+    </script>
+</head>
+
+
+<body>
+
+<h2>Code Challenge: Concurrency</h2>
+
+<div id="placement-one"></div>
+
+<button onclick="simpleJsApp.getBids({ bidsBackHandler: bidsBackHandler })">Get Bids</button>
+
+</body>
+
+</html>
